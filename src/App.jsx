@@ -1,135 +1,131 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
 
-export default function FigurinhaApp() {
-  const [pessoas, setPessoas] = useState([]);
-  const [nome, setNome] = useState("");
-  const [possui, setPossui] = useState("");
-  const [falta, setFalta] = useState("");
-  const [repetidas, setRepetidas] = useState("");
-  const [trocas, setTrocas] = useState([]);
+export default function App() {
+  const [members, setMembers] = useState([]);
+  const [name, setName] = useState("");
+  const [have, setHave] = useState("");
+  const [need, setNeed] = useState("");
+  const [dupes, setDupes] = useState("");
+  const [trades, setTrades] = useState([]);
 
-  const adicionarPessoa = () => {
-    if (!nome) return;
-    const novaPessoa = {
-      nome,
-      possui: possui ? possui.split(",").map((x) => x.trim()) : [],
-      falta: falta ? falta.split(",").map((x) => x.trim()) : [],
-      repetidas: repetidas ? repetidas.split(",").map((x) => x.trim()) : [],
-    };
-    setPessoas([...pessoas, novaPessoa]);
-    setNome("");
-    setPossui("");
-    setFalta("");
-    setRepetidas("");
+  const addMember = () => {
+    if (!name.trim()) return;
+    setMembers([
+      ...members,
+      {
+        name,
+        have: have.split(",").map((s) => s.trim()).filter(Boolean),
+        need: need.split(",").map((s) => s.trim()).filter(Boolean),
+        dupes: dupes.split(",").map((s) => s.trim()).filter(Boolean),
+      },
+    ]);
+    setName("");
+    setHave("");
+    setNeed("");
+    setDupes("");
   };
 
-  const calcularTrocas = () => {
-    let listaTrocas = [];
-    pessoas.forEach((p1) => {
-      pessoas.forEach((p2) => {
-        if (p1.nome !== p2.nome) {
-          p1.repetidas.forEach((fig) => {
-            if (p2.falta.includes(fig)) {
-              listaTrocas.push(`${p1.nome} → ${p2.nome}: figurinha ${fig}`);
-            }
-          });
+  const calculateTrades = () => {
+    let results = [];
+    for (let i = 0; i < members.length; i++) {
+      for (let j = 0; j < members.length; j++) {
+        if (i !== j) {
+          const giver = members[i];
+          const receiver = members[j];
+          const possible = giver.dupes.filter((f) => receiver.need.includes(f));
+          if (possible.length > 0) {
+            results.push(
+              `${giver.name} pode dar ${possible.join(", ")} para ${receiver.name}`
+            );
+          }
         }
-      });
-    });
-    setTrocas(listaTrocas);
+      }
+    }
+    setTrades(results);
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto space-y-6">
-      <motion.h1
-        className="text-2xl font-bold text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        Trocas de Figurinhas
-      </motion.h1>
+    <div style={{
+      minHeight: "100vh",
+      backgroundColor: "#121212",
+      color: "#fff",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      padding: "20px"
+    }}>
+      <h1 style={{ marginBottom: "20px" }}>📒 Figurinha App</h1>
 
-      {/* Cadastro de pessoas */}
-      <Card className="rounded-2xl shadow-lg">
-        <CardContent className="p-4 space-y-3">
-          <Input
-            className="text-lg"
-            placeholder="Nome"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-          />
-          <Input
-            className="text-lg"
-            placeholder="Possui (ex: 1,2,3)"
-            value={possui}
-            onChange={(e) => setPossui(e.target.value)}
-          />
-          <Input
-            className="text-lg"
-            placeholder="Falta (ex: 4,5,6)"
-            value={falta}
-            onChange={(e) => setFalta(e.target.value)}
-          />
-          <Input
-            className="text-lg"
-            placeholder="Repetidas (ex: 2,7,9)"
-            value={repetidas}
-            onChange={(e) => setRepetidas(e.target.value)}
-          />
-          <Button className="w-full text-lg py-6" onClick={adicionarPessoa}>
-            Adicionar Pessoa
-          </Button>
-        </CardContent>
-      </Card>
+      <div style={{
+        background: "#1e1e1e",
+        padding: "20px",
+        borderRadius: "12px",
+        marginBottom: "20px",
+        width: "100%",
+        maxWidth: "400px"
+      }}>
+        <input
+          placeholder="Nome"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          placeholder="Possui (ex: 1, 2, 3)"
+          value={have}
+          onChange={(e) => setHave(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          placeholder="Precisa (ex: 4, 5, 6)"
+          value={need}
+          onChange={(e) => setNeed(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          placeholder="Repetidas (ex: 7, 8)"
+          value={dupes}
+          onChange={(e) => setDupes(e.target.value)}
+          style={inputStyle}
+        />
+        <button onClick={addMember} style={buttonStyle}>
+          ➕ Adicionar
+        </button>
+      </div>
 
-      {/* Trocas */}
-      <Card className="rounded-2xl shadow-lg">
-        <CardContent className="p-4 space-y-3">
-          <Button className="w-full text-lg py-6" onClick={calcularTrocas}>
-            Calcular Trocas
-          </Button>
-          <ul className="mt-2 space-y-2">
-            {trocas.length === 0 && (
-              <li className="text-sm text-center text-gray-400">Nenhuma troca encontrada</li>
-            )}
-            {trocas.map((t, i) => (
-              <li
-                key={i}
-                className="text-sm bg-gray-800 text-white px-3 py-2 rounded-lg"
-              >
-                {t}
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <button onClick={calculateTrades} style={buttonStyle}>
+        🔄 Calcular Trocas
+      </button>
 
-      {/* Lista de pessoas */}
-      <Card className="rounded-2xl shadow-lg">
-        <CardContent className="p-4">
-          <h2 className="font-semibold text-lg mb-2 text-center">Pessoas cadastradas</h2>
-          <ul className="space-y-2">
-            {pessoas.map((p, i) => (
-              <li
-                key={i}
-                className="text-sm bg-gray-700 text-white p-3 rounded-lg"
-              >
-                <strong>{p.nome}</strong>
-                <br />
-                <span className="text-xs">Possui: {p.possui.join(", ") || "-"}</span>
-                <br />
-                <span className="text-xs">Falta: {p.falta.join(", ") || "-"}</span>
-                <br />
-                <span className="text-xs">Repetidas: {p.repetidas.join(", ") || "-"}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+      <div style={{ marginTop: "20px", maxWidth: "600px" }}>
+        <h2>Resultados</h2>
+        {trades.length === 0 && <p>Nenhuma troca calculada ainda.</p>}
+        <ul>
+          {trades.map((t, i) => (
+            <li key={i}>{t}</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
+
+const inputStyle = {
+  width: "100%",
+  padding: "10px",
+  margin: "5px 0",
+  borderRadius: "8px",
+  border: "none",
+  outline: "none"
+};
+
+const buttonStyle = {
+  background: "#0070f3",
+  color: "#fff",
+  padding: "10px 20px",
+  border: "none",
+  borderRadius: "8px",
+  cursor: "pointer",
+  marginTop: "10px"
+};
+
